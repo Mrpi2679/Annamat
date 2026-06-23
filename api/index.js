@@ -16,14 +16,18 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/annama
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key';
 
 let cachedDb = null;
+let dbAttempted = false;
 async function connectDB() {
   if (cachedDb) return;
+  if (dbAttempted) return;
+  dbAttempted = true;
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 3000 });
     cachedDb = mongoose.connection;
     console.log('MongoDB connected');
   } catch (err) {
     console.error('MongoDB connection error:', err.message);
+    console.error('Make sure your MongoDB URI is set in the .env file');
   }
 }
 
@@ -217,8 +221,15 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
-  connectDB().then(() => {
-    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+  console.log('Starting Annamat server...');
+  connectDB().catch(() => {});
+  const server = app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      const nextPort = PORT + 1;
+      console.log(`Port ${PORT} is busy, trying ${nextPort}...`);
+      app.listen(nextPort, () => console.log(`Server running on http://localhost:${nextPort}`));
+    }
   });
 }
 

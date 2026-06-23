@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "node api/index.js",
+    "dev:all": "concurrently \"npm run dev:server\" \"npm run dev\"",
     "build": "vite build",
     "preview": "vite preview",
-    "server": "node api/index.js"
+    "postinstall": "if not exist .env copy .env.example .env"
   },
   "dependencies": {
     "axios": "^1.7.0",
@@ -22,6 +24,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^10.0.3",
     "vite": "^5.4.0"
   },
   "vercel": {
