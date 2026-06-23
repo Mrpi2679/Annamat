@@ -3,10 +3,14 @@ import express from 'express';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import User from '../models/User.js';
 import FoodListing from '../models/FoodListing.js';
 import Order from '../models/Order.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
@@ -216,6 +220,13 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+});
+
+// ─── Static files & SPA fallback (for Vercel) ───────────────────
+
+app.use(express.static(path.join(__dirname, '../dist')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 // ─── Start (for local dev) ──────────────────────────────────────
