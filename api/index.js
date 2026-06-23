@@ -24,16 +24,11 @@ let cachedDb = null;
 let dbAttempted = false;
 async function connectDB() {
   if (cachedDb) return;
-  if (dbAttempted) return;
+  if (dbAttempted) throw new Error('MongoDB connection previously failed');
   dbAttempted = true;
-  try {
-    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 3000 });
-    cachedDb = mongoose.connection;
-    console.log('MongoDB connected');
-  } catch (err) {
-    console.error('MongoDB connection error:', err.message);
-    console.error('Make sure your MongoDB URI is set in the .env file');
-  }
+  await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
+  cachedDb = mongoose.connection;
+  console.log('MongoDB connected');
 }
 
 function authMiddleware(req, res, next) {
